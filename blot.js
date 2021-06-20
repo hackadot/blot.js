@@ -8,8 +8,9 @@ import { WsProvider, ApiPromise } from '@polkadot/api'
 import { ContractPromise, CodePromise, Abi } from '@polkadot/api-contract'
 
 export class Contract {
-  constructor (provider, dotContract) {
+  constructor (provider, account, dotContract) {
     this.provider = provider
+    this.account = account
     const api = this.provider.getApi()
     const wasm = dotContract.source.wasm
     this.abi = new Abi(dotContract, api.registry.getChainProperties())
@@ -19,9 +20,9 @@ export class Contract {
   // 1000, 'T', 'TT', 0
   // gasLimit: 10000000000,
   //     value: 20000000000
-  async deploy (senderAccount, { weight, value }, params, handler) {
-    const address = senderAccount.getAddress()
-    const signer = await senderAccount.getSigner()
+  async deploy (params, { weight, value }, handler) {
+    const address = this.account.getAddress()
+    const signer = await this.account.getSigner()
     return this.code.tx[this.abi.constructors[0].method]({
       gasLimit: weight,
       value
@@ -80,16 +81,32 @@ export class NetworkProvider {
     return account.data.free
   }
 
-  async transfer (senderAccount, recipientAddress, value, callback) {
-    const address = senderAccount.getAddress()
-    const signer = await senderAccount.getSigner()
-    return this.api.tx.balances
+  getApi () {
+    return this.api
+  }
+}
+
+export class Interactor {
+  constructor (provider, account) {
+    this.provider = provider
+    this.account = account
+  }
+
+  async transfer (recipientAddress, value, callback) {
+    const address = this.account.getAddress()
+    const signer = await this.account.getSigner()
+    const api = this.provider.getApi()
+    return api.tx.balances
       .transfer(recipientAddress, value)
       .signAndSend(address, { signer }, callback)
   }
 
-  getApi () {
-    return this.api
+  async getBalance () {
+    return this.provider.getBalance(this.account.getAddress())
+  }
+
+  newContract (dotContract) {
+    return new Contract(this.provider, this.account, dotContract)
   }
 }
 
@@ -117,10 +134,10 @@ export class Blot {
     return web3Accounts()
   }
 
-  async transfer (senderIndex, recipient, value, callback) {
+  async getInteractor (accountIndex) {
     const accounts = await web3Accounts()
-    const sender = new Account(accounts[senderIndex])
+    const account = new Account(accounts[accountIndex])
 
-    this.provider.transfer(sender, recipient, value, callback)
+    return new Interactor(this.provider, account)
   }
 }
