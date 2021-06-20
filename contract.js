@@ -1,5 +1,25 @@
 import { ContractPromise, CodePromise, Abi } from '@polkadot/api-contract'
 
+class ERC20 {
+  constructor (provider, abi, address) {
+    this.contract = new ContractPromise(provider.getApi(), abi, address)
+    this.options = {
+      value: 0,
+      gasLimit: 300000n * 1000000n
+    }
+  }
+
+  async tokenName () {
+    const { result } = await this.contract.query['iErc20,tokenName'](null, this.options)
+    return result.asOk.data.toUtf8()
+  }
+
+  async tokenSymbol () {
+    const { result } = await this.contract.query['iErc20,tokenSymbol'](null, this.options)
+    return result.asOk.data.toUtf8()
+  }
+}
+
 export default class Contract {
   constructor (provider, account, dotContract) {
     this.provider = provider
@@ -34,9 +54,20 @@ export default class Contract {
     return this.address
   }
 
+  assumeERC20 () {
+    return new ERC20(this.provider, this.abi, this.address)
+  }
+
   async call () {
     const api = this.provider.getApi()
-    const contract = new ContractPromise(api, this.abi, 'address')
-    console.log(contract)
+    const contract = new ContractPromise(api, this.abi, this.address)
+    const value = 0
+    const gasLimit = 300000n * 1000000n
+    const { gasConsumed, result } = await contract.query['iErc20,tokenName'](null, { gasLimit, value })
+    // console.log(contract.query)
+
+    console.log(result.toHuman())
+
+    console.log(gasConsumed.toHuman())
   }
 }
