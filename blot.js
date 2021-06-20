@@ -1,18 +1,23 @@
 import {
   web3Enable,
   web3Accounts,
-  isWeb3Injected
+  web3FromSource
 } from '@polkadot/extension-dapp'
 
 import { WsProvider, ApiPromise } from '@polkadot/api'
 
 export class Account {
   constructor (nativeAccount) {
-    this.nativeAccount = nativeAccount
+    this.account = nativeAccount
   }
 
   getAddress () {
-    return this.nativeAccount
+    return this.account.address
+  }
+
+  async getSigner () {
+    const injector = await web3FromSource(this.account.meta.source)
+    return injector.signer
   }
 }
 
@@ -21,7 +26,7 @@ export class NetworkProvider {
     this.provider = new WsProvider(url)
   }
 
-  async init () {
+  async connect () {
     this.api = await ApiPromise.create({ provider: this.provider })
     return this
   }
@@ -30,17 +35,27 @@ export class NetworkProvider {
     const account = await this.api.query.system.account(address)
     return account.data.free
   }
+
+  async transfer (senderAccount, recipientAddress, value, callback) {
+    const address = senderAccount.getAddress()
+    const signer = await senderAccount.getSigner()
+    this.api.tx.balances
+      .transfer(recipientAddress, value)
+      .signAndSend(address, { signer }, callback)
+  }
+
+  getApi () {
+    return this.api
+  }
 }
 
 export class Blot {
-  constructor () {
+  constructor (provider) {
     this.extensions = []
+    this.provider = provider
   }
 
   async enable (dappName) {
-    const extensions = isWeb3Injected
-    console.log(extensions)
-
     const beforeEnableTime = Date.now()
     this.extensions = await web3Enable(dappName)
     const afterEnableTime = Date.now()
@@ -56,5 +71,12 @@ export class Blot {
 
   async getAccounts () {
     return web3Accounts()
+  }
+
+  async transfer (senderIndex, recipient, value, callback) {
+    const accounts = await web3Accounts()
+    const sender = new Account(accounts[senderIndex])
+
+    this.provider.transfer(sender, recipient, value, callback)
   }
 }
