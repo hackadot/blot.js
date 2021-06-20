@@ -1,6 +1,3 @@
-import {
-  web3Enable,
-  web3Accounts
-} from '@polkadot/extension-dapp'
+import { Blot, NetworkProvider } from './blot.js'
 
-export { web3Enable, web3Accounts }
+export { Blot, NetworkProvider }

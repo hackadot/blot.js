@@ -32,6 +32,7 @@
   "homepage": "https://github.com/hackadot/blot.js#readme",
   "dependencies": {
     "@babel/runtime": "^7.14.6",
+    "@polkadot/api": "^4.15.1",
     "@polkadot/extension-dapp": "^0.38.5"
   }
 }
