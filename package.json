@@ -1,0 +1,37 @@
+{
+  "name": "blot.js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hackadot/blot.js.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hackadot/blot.js/issues"
+  },
+  "homepage": "https://github.com/hackadot/blot.js#readme",
+  "dependencies": {
+    "@babel/runtime": "^7.14.6",
+    "@polkadot/extension-dapp": "^0.38.5"
+  }
+}
