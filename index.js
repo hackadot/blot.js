@@ -1,3 +1,4 @@
-import { Blot, NetworkProvider, Account } from './blot.js'
+import { Blot, NetworkProvider, Account, Contract } from './blot.js'
+import dotContract from './dotContract.js'
 
-export { Blot, NetworkProvider, Account }
+export { Blot, NetworkProvider, Account, Contract, dotContract }

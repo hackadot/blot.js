@@ -5,6 +5,50 @@ import {
 } from '@polkadot/extension-dapp'
 
 import { WsProvider, ApiPromise } from '@polkadot/api'
+import { ContractPromise, CodePromise, Abi } from '@polkadot/api-contract'
+
+export class Contract {
+  constructor (provider, dotContract) {
+    this.provider = provider
+    const api = this.provider.getApi()
+    const wasm = dotContract.source.wasm
+    this.abi = new Abi(dotContract, api.registry.getChainProperties())
+    this.code = new CodePromise(api, this.abi, wasm)
+  }
+
+  // 1000, 'T', 'TT', 0
+  // gasLimit: 10000000000,
+  //     value: 20000000000
+  async deploy (senderAccount, { weight, value }, params, handler) {
+    const address = senderAccount.getAddress()
+    const signer = await senderAccount.getSigner()
+    return this.code.tx[this.abi.constructors[0].method]({
+      gasLimit: weight,
+      value
+    }, ...params).signAndSend(address, { signer }, ({ events = [], status }) => {
+      if (handler) {
+        handler({ events, status })
+      }
+      if (status.isInBlock) {
+        events.forEach(({ event: { data, method, section } }) => {
+          if (section === 'contracts' && method === 'ContractEmitted') {
+            this.address = data[0].toHuman()
+          }
+        })
+      }
+    })
+  }
+
+  getAddress () {
+    return this.address
+  }
+
+  async call () {
+    const api = this.provider.getApi()
+    const contract = new ContractPromise(api, this.abi, 'address')
+    console.log(contract)
+  }
+}
 
 export class Account {
   constructor (nativeAccount) {
@@ -39,7 +83,7 @@ export class NetworkProvider {
   async transfer (senderAccount, recipientAddress, value, callback) {
     const address = senderAccount.getAddress()
     const signer = await senderAccount.getSigner()
-    this.api.tx.balances
+    return this.api.tx.balances
       .transfer(recipientAddress, value)
       .signAndSend(address, { signer }, callback)
   }
